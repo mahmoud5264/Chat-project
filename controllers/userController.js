@@ -72,4 +72,76 @@ signIn = async (req, res) => {
     });
 };
 
+
+acceptRequest = async (req, res) => {
+    const other = await User.findById(req.params.ID);
+    const user = await User.findById(req.user._id);
+    let error = "";
+    if (!user || !other || String(user._id) === String(other._id))
+        return res.status(400).json("Invalid user");
+    if (
+        user.recievedRequests.findIndex((e) => String(e) === String(other._id)) === -1
+    )
+        error = "You have not recieved connection request to accept";
+    if (error) {
+        return res.status(400).json(error);
+    }
+    const otherindex = user.recievedRequests.findIndex(
+        (e) => String(e) === String(other._id)
+    );
+    const userindex = other.sentRequests.findIndex((e) => String(e) === String(user._id));
+    user.recievedRequests.splice(otherindex, 1);
+    other.sentRequests.splice(userindex, 1);
+    user.connections.push(other._id);
+    other.connections.push(user._id);
+    await user.save();
+    await other.save();
+    res.json(user);
+};
+ 
+rejectRequest = async (req, res) => {
+    const other = await User.findById(req.params.ID);
+    const user = await User.findById(req.user._id);
+    let error = "";
+    if (!user || !other || String(user._id) === String(other._id))
+        return res.status(400).json("Invalid user");
+    if (
+        user.recievedRequests.findIndex((e) => String(e) === String(other._id)) === -1
+    )
+        error = "You have not recieved connection request to reject";
+    if (error) {
+        return res.status(400).json(error);
+    }
+    const otherindex = user.recievedRequests.findIndex(
+        (e) => String(e) === String(other._id)
+    );
+    const userindex = other.sentRequests.findIndex((e) => String(e) === String(user._id));
+    user.recievedRequests.splice(otherindex, 1);
+    other.sentRequests.splice(userindex, 1);
+    await user.save();
+    await other.save();
+    res.json(user);
+};
+ 
+removeConnection = async (req, res) => {
+    const other = await User.findById(req.params.ID);
+    const user = await User.findById(req.user._id);
+    let error = "";
+    if (!user || !other || String(user._id) === String(other._id))
+        return res.status(400).json("Invalid user");
+    if (user.connections.findIndex((e) => String(e) === String(other._id)) === -1)
+        error = "User is not already connected with you";
+    if (error) {
+        return res.status(400).json(error);
+    }
+    const otherindex = user.connections.findIndex((e) => String(e) === String(other._id));
+    const userindex = other.connections.findIndex((e) => String(e) === String(user._id));
+    user.connections.splice(otherindex, 1);
+    other.connections.splice(userindex, 1);
+    await user.save();
+    await other.save();
+    res.json(user);
+};
+ 
+
 module.exports = { signUp , signIn } ;
