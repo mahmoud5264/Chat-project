@@ -1,5 +1,6 @@
 const User = require('../models/userModel')
 const bcrypt = require('bcryptjs')
+const jwt = require("jsonwebtoken")
 
 function isValidPassword(x) {
     if (x.length < 8) return 0;
@@ -25,7 +26,6 @@ function isValidPassword(x) {
     return 1;
 }
 
-
 signUp = async (req, res) => {
     const data = await User.findOne({ email: req.body.email })
     if (data) {
@@ -40,7 +40,6 @@ signUp = async (req, res) => {
             );
         return;
     }
-
     bcrypt.hash(req.body.password, 10).then(async (hashed) => {
         let email = req.body.email;
         let user = null;
@@ -56,4 +55,21 @@ signUp = async (req, res) => {
     });
 };
 
-module.exports = { signUp }
+signIn = async (req, res) => {
+    console.log(req.body.email);
+    const usertmp = await User.findOne({ email: req.body.email })
+    console.log(usertmp);
+    if (!usertmp) {
+        return res.status(203).json("Email is not exist");
+    }
+ 
+    bcrypt.compare(req.body.password, usertmp.password).then((same) => {
+        if (!same) {
+            return res.status(400).json("Password is not correct");
+        }
+        const token = jwt.sign({ "id": usertmp._id }, "HS256");
+        res.status(200).send({ token: token });
+    });
+};
+
+module.exports = { signUp , signIn } ;
