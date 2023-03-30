@@ -144,4 +144,4 @@ removeConnection = async (req, res) => {
 };
  
 
-module.exports = { signUp , signIn } ;
+module.exports = { signUp , signIn , acceptRequest , rejectRequest , removeConnection };
