@@ -142,6 +142,5 @@ removeConnection = async (req, res) => {
     await other.save();
     res.json(user);
 };
- 
 
 module.exports = { signUp , signIn , acceptRequest , rejectRequest , removeConnection };
