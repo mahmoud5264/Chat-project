@@ -6,5 +6,8 @@ const userController = require("../controllers/userController");
 
 router.post("/signup", userController.signUp);
 router.post("/signin/", userController.signIn);
+router.post('/acceptrequest/:ID/', guard.isLogin, userController.acceptRequest)
+router.post('/rejectrequest/:ID/', guard.isLogin, userController.rejectRequest)
+router.post('/removeconnection/:ID/', guard.isLogin, userController.removeConnection)
 
 module.exports = router
