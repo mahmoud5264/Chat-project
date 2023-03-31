@@ -5,7 +5,15 @@ const router = express.Router();
 const userController = require("../controllers/userController");
 
 router.post("/signup", userController.signUp);
-router.post("/signin/", userController.signIn); 
+
+router.post("/signin/", userController.signIn);
+router.post('/blockuser/:ID/', guard.isLogin, userController.blockUser)
+router.post('/unblockuser/:ID/', guard.isLogin, userController.unblockUser)
+
+router.post('/acceptrequest/:ID/', guard.isLogin, userController.acceptRequest)
+router.post('/rejectrequest/:ID/', guard.isLogin, userController.rejectRequest)
+router.post('/removeconnection/:ID/', guard.isLogin, userController.removeConnection)
+
 router.post('/sendrequest/:ID/', guard.isLogin, userController.sendRequest);
 router.post('/cancelrequest/:ID/', guard.isLogin, userController.cancelRequest);
 

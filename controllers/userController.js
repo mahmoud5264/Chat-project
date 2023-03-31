@@ -119,4 +119,138 @@ sendRequest = async (req, res) => {
     res.json(me);
   };
 
-module.exports = { signUp , signIn, sendRequest , cancelRequest} ;
+
+
+blockUser = async (req, res) => {
+    const hisdata = await User.findById(req.params.ID);
+    const mydata = await User.findById(req.user._id);
+    let error = "";
+    if (!mydata || !hisdata || String(mydata._id) === String(hisdata._id))
+        return res.status(400).json("Invalid user");
+    if (mydata.blockedUsers.findIndex((e) => String(e) === String(hisdata._id)) !== -1)
+        error = "You have already blocked this user";
+    if (error) {
+        return res.status(400).json(error);
+    }
+    if (mydata.connections.findIndex((e) => String(e) === String(hisdata._id)) !== -1) {
+        const hisindex = mydata.connections.findIndex((e) => String(e) === String(hisdata._id));
+        const myindex = hisdata.connections.findIndex((e) => String(e) === String(mydata._id));
+        mydata.connections.splice(hisindex, 1);
+        hisdata.connections.splice(myindex, 1);
+    }
+    if (mydata.sentRequests.findIndex((e) => String(e) === String(hisdata._id)) !== -1) {
+        const hisindex = mydata.sentRequests.findIndex((e) => String(e) === String(hisdata._id));
+        const myindex = hisdata.recievedRequests.findIndex(
+            (e) => String(e) === String(mydata._id)
+        );
+        mydata.sentRequests.splice(hisindex, 1);
+        hisdata.recievedRequests.splice(myindex, 1);
+    }
+    if (
+        mydata.recievedRequests.findIndex((e) => String(e) === String(hisdata._id)) !== -1
+    ) {
+        const hisindex = mydata.recievedRequests.findIndex(
+            (e) => String(e) === String(hisdata._id)
+        );
+        const myindex = hisdata.sentRequests.findIndex((e) => String(e) === String(mydata._id));
+        mydata.recievedRequests.splice(hisindex, 1);
+        hisdata.sentRequests.splice(myindex, 1);
+    }
+    mydata.blockedUsers.push(hisdata._id);
+    await mydata.save();
+    await hisdata.save();
+    res.json(mydata);
+};
+ 
+unblockUser = async (req, res) => {
+    const hisdata = await User.findById(req.params.ID);
+    const mydata = await User.findById(req.user._id);
+    let error = "";
+    if (!mydata || !hisdata || String(mydata._id) === String(hisdata._id))
+        return res.status(400).json("Invalid user");
+    if (mydata.blockedUsers.findIndex((e) => String(e) === String(hisdata._id)) === -1)
+        error = "You have not already blocked this user";
+    if (error) {
+        return res.status(400).json(error);
+    }
+    const hisindex = mydata.blockedUsers.findIndex((e) => String(e) === String(hisdata._id));
+    mydata.blockedUsers.splice(hisindex, 1);
+    await mydata.save();
+    res.json(mydata);
+};
+
+
+
+acceptRequest = async (req, res) => {
+    const other = await User.findById(req.params.ID);
+    const user = await User.findById(req.user._id);
+    let error = "";
+    if (!user || !other || String(user._id) === String(other._id))
+        return res.status(400).json("Invalid user");
+    if (
+        user.recievedRequests.findIndex((e) => String(e) === String(other._id)) === -1
+    )
+        error = "You have not recieved connection request to accept";
+    if (error) {
+        return res.status(400).json(error);
+    }
+    const otherindex = user.recievedRequests.findIndex(
+        (e) => String(e) === String(other._id)
+    );
+    const userindex = other.sentRequests.findIndex((e) => String(e) === String(user._id));
+    user.recievedRequests.splice(otherindex, 1);
+    other.sentRequests.splice(userindex, 1);
+    user.connections.push(other._id);
+    other.connections.push(user._id);
+    await user.save();
+    await other.save();
+    res.json(user);
+};
+ 
+rejectRequest = async (req, res) => {
+    const other = await User.findById(req.params.ID);
+    const user = await User.findById(req.user._id);
+    let error = "";
+    if (!user || !other || String(user._id) === String(other._id))
+        return res.status(400).json("Invalid user");
+    if (
+        user.recievedRequests.findIndex((e) => String(e) === String(other._id)) === -1
+    )
+        error = "You have not recieved connection request to reject";
+    if (error) {
+        return res.status(400).json(error);
+    }
+    const otherindex = user.recievedRequests.findIndex(
+        (e) => String(e) === String(other._id)
+    );
+    const userindex = other.sentRequests.findIndex((e) => String(e) === String(user._id));
+    user.recievedRequests.splice(otherindex, 1);
+    other.sentRequests.splice(userindex, 1);
+    await user.save();
+    await other.save();
+    res.json(user);
+};
+ 
+removeConnection = async (req, res) => {
+    const other = await User.findById(req.params.ID);
+    const user = await User.findById(req.user._id);
+    let error = "";
+    if (!user || !other || String(user._id) === String(other._id))
+        return res.status(400).json("Invalid user");
+    if (user.connections.findIndex((e) => String(e) === String(other._id)) === -1)
+        error = "User is not already connected with you";
+    if (error) {
+        return res.status(400).json(error);
+    }
+    const otherindex = user.connections.findIndex((e) => String(e) === String(other._id));
+    const userindex = other.connections.findIndex((e) => String(e) === String(user._id));
+    user.connections.splice(otherindex, 1);
+    other.connections.splice(userindex, 1);
+    await user.save();
+    await other.save();
+    res.json(user);
+};
+ 
+
+module.exports = { signUp , signIn ,sendRequest , cancelRequest, acceptRequest , rejectRequest , removeConnection,blockUser ,unblockUser };
+
