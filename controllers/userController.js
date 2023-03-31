@@ -71,6 +71,54 @@ signIn = async (req, res) => {
         res.status(200).send({ token: token });
     });
 };
+sendRequest = async (req, res) => {
+    const him = await User.findById(req.params.ID);
+    const me = await User.findById(req.user._id);
+    let error = "";
+    if (!me || !him || String(me._id) === String(him._id))
+      return res.status(400).json("Invalid user");
+    if (him.blockedUsers.findIndex((e) => String(e) === String(me._id)) !== -1)
+      error = "User has blocked you";
+    if (
+      me.recievedRequests.findIndex((e) => String(e) === String(him._id)) !== -1
+    )
+      error = "User has already sent connection request to you";
+    if (me.sentRequests.findIndex((e) => String(e) === String(him._id)) !== -1)
+      error = "Connection request is already sent";
+    if (me.connections.findIndex((e) => String(e) === String(him._id)) !== -1)
+      error = "User is already connected with you";
+    if (error) {
+      return res.status(400).json(error);
+    }
+    me.sentRequests.push(him._id);
+    him.recievedRequests.push(me._id);
+    await me.save();
+    await him.save();
+    res.json(me);
+  };
+   
+  cancelRequest = async (req, res) => {
+    const him = await User.findById(req.params.ID);
+    const me = await User.findById(req.user._id);
+    let error = "";
+    if (!me || !him || String(me._id) === String(him._id))
+      return res.status(400).json("Invalid user");
+    if (me.sentRequests.findIndex((e) => String(e) === String(him._id)) === -1)
+      error = "You have not sent connection request to cancel";
+    if (error) {
+      return res.status(400).json(error);
+    }
+    const i1 = me.sentRequests.findIndex((e) => String(e) === String(him._id));
+    const i2 = him.recievedRequests.findIndex(
+      (e) => String(e) === String(me._id)
+    );
+    me.sentRequests.splice(i1, 1);
+    him.recievedRequests.splice(i2, 1);
+    await me.save();
+    await him.save();
+    res.json(me);
+  };
+
 
 
 blockUser = async (req, res) => {
@@ -204,5 +252,5 @@ removeConnection = async (req, res) => {
 };
  
 
-module.exports = { signUp , signIn , acceptRequest , rejectRequest , removeConnection,blockUser ,unblockUser };
+module.exports = { signUp , signIn ,sendRequest , cancelRequest, acceptRequest , rejectRequest , removeConnection,blockUser ,unblockUser };
 
