@@ -1,4 +1,4 @@
-const { allChats, chatMemebers, allPinnedChats} = require('../controllers/chatController');
+const { allChats, chatMemebers, allPinnedChats , getChat , createChat , changeName} = require('../controllers/chatController');
 const { isLogin } = require('../helper/login');
 const upload = require("../utils/multer")
 
