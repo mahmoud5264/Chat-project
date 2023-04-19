@@ -1,7 +1,7 @@
 const Chat = require("../models/chatModel");
 const mongoose = require("mongoose");
 
-// Mahmoud
+
 exports.chatMemebers = async (req, res) => {
   const chatId = req.params.id;
   const members = await Chat.find(
@@ -42,4 +42,46 @@ exports.allPinnedChats = async (req, res) => {
   })
   res.status(200).json(chat);
 };
+
+
+exports.leaveGroup = async (req, res) => {
+  let data = await Chat.findByIdAndUpdate(req.body.id, {
+    $pull: { whoCanSend: req.user._id },
+  });
+  res.status(200).json(data);
+};
+
+exports.pinChat = async (req, res) => {
+  let data = await Chat.findByIdAndUpdate(req.body.id, {
+    $push: { pinnedBy: req.user._id },
+  })
+  res.status(200).json(data);
+}
+
+exports.unpinChat = async (req, res) => {
+  let data = await Chat.findByIdAndUpdate(req.body.id, {
+    $pull: { pinnedBy: req.user._id },
+  })
+  res.status(200).json(data);
+}
+
+exports.blockChat = async (req, res) => {
+  let data = await Chat.findByIdAndUpdate(req.body.id, {
+
+    $pull: {whoCanSend: {$exists: true}},$set: { whoBlocked:req.user._id },
+  })
+  //console.log(data);
+  res.status(200).json(data);
+}
+
+exports.unblockChat = async (req, res) => {
+  let chat = await Chat.findById(req.body.id)
+  if(String(chat.whoBlocked)!=String(req.user._id))return res.status(400).json("you are not allowed to un block this");
+  //console.log(chat);
+  let data = await Chat.findByIdAndUpdate(req.body.id, {
+
+    $push: { whoCanSend: chat.users },$set: { whoBlocked:"" },
+  })
+  res.status(200).json(data);
+}
 
