@@ -30,20 +30,25 @@ exports.sendMessage = async (req, res) => {
     await Message.findByIdAndUpdate(id, { content: req.body.content });
     res.status(200).json("message updated ");
   };
+
 exports.allMessages = async (req, res) => {
-  console.log(req.user._id);
   if (mongoose.Types.ObjectId.isValid(req.params.chatId)) {
 
     let updated = await Message.updateMany(
       {
         chat: req.params.chatId,
-        readBy: {$not:{ $elemMatch: { $eq: req.user._id } }},
+        readBy: { $not: { $elemMatch: { $eq: req.user._id } } },
       },
       { $addToSet: { readBy: req.user._id } }
     );
+    const lastdays = req.query.lastdays || 100000000;
+    const time = new Date();
+    time.setDate(time.getDate() - lastdays);
+    const now = new Date();
     let messages = await Message.find({
       chat: req.params.chatId,
       whoCanSee: { $elemMatch: { $eq: req.user._id } },
+      createdAt: { $gte: time, $lt: now }
     })
       .populate("sender", "firstname image email")
       .populate("chat")
@@ -51,7 +56,6 @@ exports.allMessages = async (req, res) => {
     res.status(200).json(messages);
   } else res.status(400).json("No such chat");
 };
-
 
 
 exports.deleteChatMessages = async (req, res) => {
