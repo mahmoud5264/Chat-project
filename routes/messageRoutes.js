@@ -1,5 +1,5 @@
 
-const { sendMessage, editMessage,allMessages,deleteChatMessages } = require('../controllers/messageContoller');
+const { sendMessage, editMessage,allMessages,deleteChatMessages } = require('../controllers/messageController');
 const upload = require("../utils/multer");
 const { isLogin } = require('../helper/login');
 const route = require('express').Router()
