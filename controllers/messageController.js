@@ -5,8 +5,8 @@ const mongoose = require("mongoose");
 
 exports.sendMessage = async (req, res) => {
     const { content, chatId } = req.body;
-    let whoCanSee = req.body.whoCanSee?.split(',')
-  
+    let chat = await Chat.findById(chatId);
+    let whoCanSee = chat.whoCanSend;
     let resualt = await Message.create({
       sender: req.user._id,
       content: content,
